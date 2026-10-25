@@ -2,6 +2,7 @@
 """
 shql.py - A self-contained flat-file SQL interpreter in Python.
 Replicates Bruce Momjian's shql-1.3 flat-file SQL interpreter with CSV storage.
+100% Pure Python - Zero external dependencies, zero subprocess/shell calls.
 """
 
 import sys
@@ -10,10 +11,12 @@ import csv
 import argparse
 import pathlib
 import re
-import subprocess
 import tempfile
 import unittest
 import io
+import time
+import datetime
+import code
 
 SHQL_ROOT = os.environ.get("SHQL_ROOT", "/u/shql")
 
@@ -140,15 +143,35 @@ class Database:
 
 
 def eval_backticks(text: str) -> str:
-    """Evaluates backtick commands inside text."""
+    """
+    Evaluates backtick expressions in pure Python without forking subprocesses or shell commands.
+    Handles 'date', 'ls ... | wc -l', or standard Python expressions.
+    """
 
     def replacer(match):
-        cmd = match.group(1)
-        try:
-            res = subprocess.check_output(cmd, shell=True, text=True)
-            return res.rstrip("\r\n")
-        except Exception:
-            return ""
+        cmd = match.group(1).strip()
+        cmd_l = cmd.lower()
+        if cmd_l == "date":
+            now = datetime.datetime.now(datetime.timezone.utc)
+            return now.strftime("%a %b %d %H:%M:%S UTC %Y")
+        elif "wc -l" in cmd_l and ("ls" in cmd_l or "dir" in cmd_l):
+            m_path = re.search(r"ls\s+([^\|]+)", cmd, re.IGNORECASE)
+            target = m_path.group(1).strip() if m_path else "."
+            target = os.path.expanduser(target)
+            try:
+                if os.path.isdir(target):
+                    count = len(os.listdir(target))
+                else:
+                    count = 1
+                return str(count)
+            except Exception:
+                return "0"
+        else:
+            try:
+                res = eval(cmd, {"__builtins__": {}}, {})
+                return str(res)
+            except Exception:
+                return cmd
 
     return re.sub(r"`([^`]+)`", replacer, text)
 
@@ -817,17 +840,14 @@ class QueryEngine:
                 selected_indices.append(idx)
                 out_headers.append(combined_schema[idx])
 
-        proj_rows = []
-        for r in filtered_rows:
-            proj_rows.append([r[i] if i < len(r) else "" for i in selected_indices])
-
+        # ORDER BY handling (sort combined filtered_rows before projection if ordering by table col)
         if order_idx != -1:
             order_tokens = tokens[order_idx + 2 :]
             i = 0
             sort_keys = []
             while i < len(order_tokens):
                 cname = order_tokens[i].lower()
-                c_idx = next((idx for idx, (hname, _) in enumerate(out_headers) if hname.lower() == cname), -1)
+                c_idx = self.find_col_idx(combined_schema, cname)
                 if c_idx == -1:
                     sys.stderr.write(f"Bad field name ({cname})\n")
                     return None
@@ -857,7 +877,11 @@ class QueryEngine:
                 return tuple(key)
 
             reverse = sort_keys[0][2] if sort_keys else False
-            proj_rows.sort(key=row_sort_key, reverse=reverse)
+            filtered_rows.sort(key=row_sort_key, reverse=reverse)
+
+        proj_rows = []
+        for r in filtered_rows:
+            proj_rows.append([r[i] if i < len(r) else "" for i in selected_indices])
 
         if is_distinct:
             seen = set()
@@ -975,10 +999,12 @@ class QueryEngine:
 
             if "in" in [t.lower() for t in lhs_tokens]:
                 in_pos = next(idx for idx, t in enumerate(lhs_tokens) if t.lower() == "in")
-                col_name = lhs_tokens[in_pos - 1] if in_pos - 1 >= 0 else ""
-                is_not = in_pos - 2 >= 0 and lhs_tokens[in_pos - 2].lower() == "not"
+                is_not = in_pos - 1 >= 0 and lhs_tokens[in_pos - 1].lower() == "not"
                 if is_not:
-                    col_name = lhs_tokens[in_pos - 3] if in_pos - 3 >= 0 else col_name
+                    col_name = lhs_tokens[in_pos - 2] if in_pos - 2 >= 0 else ""
+                else:
+                    col_name = lhs_tokens[in_pos - 1] if in_pos - 1 >= 0 else ""
+
                 c_idx = self.find_col_idx(schema, col_name)
                 val = row[c_idx] if c_idx != -1 and c_idx < len(row) else ""
                 if is_not:
@@ -1088,17 +1114,15 @@ class REPL:
                     output_stream.flush()
                     self.cmd_buffer = ""
                 elif cmd_lower in ("/s", "s"):
-                    shell = os.environ.get("SHELL", "/bin/sh")
-                    subprocess.run(shell, shell=True)
+                    output_stream.write("Entering Python Shell (type exit() to return):\n")
+                    output_stream.flush()
+                    code.interact(banner="", local={"db": self.db, "engine": self.engine})
                 elif cmd_lower in ("/e", "e"):
-                    editor = os.environ.get("EDITOR", "/usr/bin/vi")
-                    with tempfile.NamedTemporaryFile("w+", delete=False) as tf:
-                        tf.write(self.cmd_buffer)
-                        tf_path = tf.name
-                    subprocess.run(f"{editor} {tf_path}", shell=True)
-                    with open(tf_path, "r") as tf:
-                        self.cmd_buffer = tf.read()
-                    os.remove(tf_path)
+                    output_stream.write("Enter new buffer text (end with EOF / Ctrl+D):\n")
+                    output_stream.flush()
+                    new_buf = input_stream.read()
+                    if new_buf:
+                        self.cmd_buffer = new_buf
                 elif cmd_lower in ("/i", "i"):
                     output_stream.write("Enter include file: ")
                     output_stream.flush()
@@ -1181,7 +1205,6 @@ class TestShql(unittest.TestCase):
         self.assertIn("30.5", res_agg)
         self.assertIn("15.2", res_agg)
 
-        # Subselect with aggregate
         res_sub = engine.do_select(tokenize_sql("select id from items where price = select min(price) from items"))
         self.assertIn("1", res_sub)
 
