@@ -2,7 +2,7 @@
 """
 shql.py - A self-contained flat-file SQL interpreter in Python.
 Replicates Bruce Momjian's shql-1.3 flat-file SQL interpreter with CSV storage.
-100% Pure Python - Zero external dependencies, zero subprocess/shell calls.
+Zero external dependencies. Launches $EDITOR if set for /e command.
 """
 
 import sys
@@ -17,6 +17,7 @@ import io
 import time
 import datetime
 import code
+import subprocess
 
 SHQL_ROOT = os.environ.get("SHQL_ROOT", "/u/shql")
 
@@ -144,7 +145,7 @@ class Database:
 
 def eval_backticks(text: str) -> str:
     """
-    Evaluates backtick expressions in pure Python without forking subprocesses or shell commands.
+    Evaluates backtick expressions in pure Python.
     Handles 'date', 'ls ... | wc -l', or standard Python expressions.
     """
 
@@ -840,7 +841,6 @@ class QueryEngine:
                 selected_indices.append(idx)
                 out_headers.append(combined_schema[idx])
 
-        # ORDER BY handling (sort combined filtered_rows before projection if ordering by table col)
         if order_idx != -1:
             order_tokens = tokens[order_idx + 2 :]
             i = 0
@@ -1118,11 +1118,24 @@ class REPL:
                     output_stream.flush()
                     code.interact(banner="", local={"db": self.db, "engine": self.engine})
                 elif cmd_lower in ("/e", "e"):
-                    output_stream.write("Enter new buffer text (end with EOF / Ctrl+D):\n")
-                    output_stream.flush()
-                    new_buf = input_stream.read()
-                    if new_buf:
-                        self.cmd_buffer = new_buf
+                    editor = os.environ.get("EDITOR")
+                    if editor:
+                        with tempfile.NamedTemporaryFile("w+", delete=False) as tf:
+                            tf.write(self.cmd_buffer)
+                            tf_path = tf.name
+                        try:
+                            subprocess.run(f"{editor} {tf_path}", shell=True)
+                            with open(tf_path, "r") as tf:
+                                self.cmd_buffer = tf.read()
+                        finally:
+                            if os.path.exists(tf_path):
+                                os.remove(tf_path)
+                    else:
+                        output_stream.write("Enter new buffer text (end with EOF / Ctrl+D):\n")
+                        output_stream.flush()
+                        new_buf = input_stream.read()
+                        if new_buf:
+                            self.cmd_buffer = new_buf
                 elif cmd_lower in ("/i", "i"):
                     output_stream.write("Enter include file: ")
                     output_stream.flush()
