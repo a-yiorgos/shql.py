@@ -1,0 +1,1225 @@
+#!/bin/sh
+# This is a shell archive (produced by GNU sharutils 4.1).
+# To extract the files from this archive, save it to some FILE, remove
+# everything before the `!/bin/sh' line above, then type `sh FILE'.
+#
+# Made on 1995-07-09 17:46 EDT by <root@candle.pha.pa.us>.
+# Source directory was `/var/local/shql/dist/tmp'.
+#
+# Existing files will *not* be overwritten unless `-c' is specified.
+#
+# This shar contains:
+# length mode       name
+# ------ ---------- ------------------------------------------
+#   1041 -rw-r--r-- CHANGES
+#   4520 -rw-r--r-- README
+#   2156 -rw-r--r-- demo.shql
+#  20727 -rwxr-xr-x shql
+#
+touch -am 1231235999 $$.touch >/dev/null 2>&1
+if test ! -f 1231235999 && test -f $$.touch; then
+  shar_touch=touch
+else
+  shar_touch=:
+  echo
+  echo 'WARNING: not restoring timestamps.  Consider getting and'
+  echo "installing GNU \`touch', distributed in GNU File Utilities..."
+  echo
+fi
+rm -f 1231235999 $$.touch
+#
+# ============= CHANGES ==============
+if test -f 'CHANGES' && test X"$1" != X"-c"; then
+  echo 'x - skipping CHANGES (file already exists)'
+else
+  echo 'x - extracting CHANGES (text)'
+  sed 's/^X//' << 'SHAR_EOF' > 'CHANGES' &&
+New to versoin 1.3
+-----------------------------------
+changed sed handling of sql statements for portability
+fixed count bug with -q(quiet) option
+X
+New to version 1.2
+-----------------------------------
+changed sed script to allow spaces at the end of /g lines
+added backslash to sed script for portability
+X
+New to version 1.2
+-----------------------------------
+fixed bug where -q option causes first row to always print
+fixed subselect bug on first row
+fixed bug with subselect's with where clauses
+fixed bug in multi-table joins
+X
+X
+New to version 1.1
+-----------------------------------
+Now runs under ksh as well as sh.
+Multi-table joins possible without creating views
+Aggregates now supported
+Looks in your $HOME/shql/ for database name also
+Execution operators are now '\' and '/',with '/' now possible the end 
+X	of a line
+White-space is not required as it was before
+New -q option removes table headers, so only taking output that begins
+X	with '|' gets you all the data
+Delete syntax now requires a FROM, as it should have all along
+SHAR_EOF
+  $shar_touch -am 0709174395 'CHANGES' &&
+  chmod 0644 'CHANGES' ||
+  echo 'restore of CHANGES failed'
+  shar_count="`wc -c < 'CHANGES'`"
+  test 1041 -eq "$shar_count" ||
+    echo "CHANGES: original size 1041, current size $shar_count"
+fi
+# ============= README ==============
+if test -f 'README' && test X"$1" != X"-c"; then
+  echo 'x - skipping README (file already exists)'
+else
+  echo 'x - extracting README (text)'
+  sed 's/^X//' << 'SHAR_EOF' > 'README' &&
+X                              S H Q L  version 1.2
+X
+X	Shql is a program that reads SQL commands interactively and
+X	executes those commands by creating and manipulating Unix files.
+X
+X	This program requires a bourne shell that understands functions,
+X	as well as awk, grep, cut, sort, uniq, join, wc, and sed.
+X
+X 	This script can be invoked with the command 
+X
+X		shql [-q] {database name}
+X
+X  	A directory must be created for the database before you may use it.
+X	This directory will house all data files for a single database.
+X	All datafiles are created with mode 666 ('rw-rw-rw-'), so create the
+X	directory with 777 ('rwxrwxrwx') if you want the database to be 
+X	sharable, and 700 ('rwx------') to be private.  Of course, multiple
+X	databases are possible.  A database called 'mydb' may be created
+X	as a directory $HOME/mydb, $HOME/shql/mydb, ./mydb, or as 
+X	$SHQL_ROOT/mydb, where $SHQL_ROOT is defined below.  The -q
+X	option turns off the display of headings so the output of shql
+X	can be used by other programs by caputuring all lines that begin
+X	the pipe symbol.
+X
+X  	The program is patterned after Ingres's interactive sql terminal
+X	monitor program.  Terminal monitor commands begin with either a
+X	forward or backward-slash.  Forward slashes may appear at the end of
+X	a commend line. Back-slashes are accepted for compatability.  The /g
+X	is the 'go' command, /p is print, and /q is quit.  Try 'help commands'
+X	for a full list.  Because of this, if you need a slash as the
+X	second to last caracter on a line, you should add a space
+X	between the slash and the last character.
+X	
+X	To get started, invoke shql with a database name.  Use the directory 
+X	name you created above. Type
+X
+X		shql mydb
+X
+X	if the directory you created was 'mydb'.  Once shql starts up, you 
+X	should see the database name displayed, and then a '*'. At this
+X	point, the most valuable thing is to type help,
+X
+X		* help
+X		* /g
+X
+X	You may then go on.  The command 'help syntax' displays syntax
+X	for all SQL operations, and 'help commands' displays all shql
+X	workspace commands.  Try the demo.
+X
+X	Shql can execute only one operation at a time, but operations can
+X	be spread over several lines.
+X
+X	Shql operations are allow 'select' operations on multiple tables.
+X	Table names are read from left to write in select's 'from'
+X	section, so the tables should be ordered with the most central
+X	tables first.  In two-table joins, it doesn't matter.  In three
+X	table joins, if you join table A-to-B and B-to-C, B must not be
+X	the last table in the from clause, because shql will not be able
+X	to join tables A-C.  If you get the message 'Join not found, try
+X	reordering tables', this is probably the problem.  Also
+X	qualified field names are not understood, like tablename.fieldname,
+X	so if you are joining my_id in table A with my_id in table B, just
+X	say 'my_id = my_id'.  Views can also be used to create
+X	multi-table selects.
+X
+X	Subselects are implemented, but must be the last operand of a
+X	'where' clause, most useful with 'in'.
+X
+X	In most cases, commas are optional.  NULLs are not implemented.
+X	Aggregates like AVG() are implemented, but not with GROUP BY.
+X
+X	When INSERTing strings that contain the characters !,*,=,>,<,(, or ),
+X	spaces or backslashes may be added during the insert.  This is a
+X	side-effect of the string manipulation needed to properly
+X	parse the command parameters.
+X
+X	This SQL is type-less, so specify just the column width when creating
+X	tables.  This is used only for display purposes.  Shql is
+X	case-sensitive, and expects SQL key words to be in lower case.
+X	
+X	Commands can be piped into shql.  The table data files are
+X	tab delimited, so awk scripts can be used to generate reports 
+X	directly from the tables.  To operate on non-shql data files,
+X	create a dummy table with the proper fields, then copy your file
+X	into your shql data directory, replacing your delimiters with
+X	tabs, then run shql on the table, and convert the table back to 
+X	its original format.  Grave accents (`) may be used to execute 
+X	unix command from with shql.  Environment variables may also be
+X	used. See the demo for an example, i.e. "cat demo.shql | shql mydb".
+X
+X	If you have comments, suggestions, or bug reports contact:
+X
+X		Bruce Momjian, root@candle.pha.pa.us
+X
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: 2.6.1
+X
+mQBtAy6pceUAAAEDAM9YKKJiqG7AzjLIyvqmDHvjVnmCG0QlhNZm3EdpcbIZBEUJ
+41zWuGhvusiC99MeXy43kxSF4pJLFWhLDYRk1unVvz5y3B+xyERhig3h/AWWRaxH
+J4HzFdeKgclqllqhVQAFEbQlQnJ1Y2UgTW9tamlhbiA8cm9vdEBjYW5kbGUucGhh
+LnBhLnVzPg==
+=S8mw
+-----END PGP PUBLIC KEY BLOCK-----
+SHAR_EOF
+  $shar_touch -am 0709174395 'README' &&
+  chmod 0644 'README' ||
+  echo 'restore of README failed'
+  shar_count="`wc -c < 'README'`"
+  test 4520 -eq "$shar_count" ||
+    echo "README: original size 4520, current size $shar_count"
+fi
+# ============= demo.shql ==============
+if test -f 'demo.shql' && test X"$1" != X"-c"; then
+  echo 'x - skipping demo.shql (file already exists)'
+else
+  echo 'x - extracting demo.shql (text)'
+  sed 's/^X//' << 'SHAR_EOF' > 'demo.shql' &&
+# Demo for SHQL
+# Create table customer
+create table customer (
+X	name 30,
+X	age  3,
+X	status 1)
+/p/g
+X
+# Put one person in the table
+insert into customer values ( 'Fred', 32, 'G' )/p/g
+X
+# Study the table
+help customer
+/p/g
+select * from customer/p/g
+X
+# Add two more people
+insert into customer values 
+( 'Barney', 29, 'G', 'Wilma', 28, 'D' )
+/p/g
+print customer
+/p/g
+X
+# Get customers with 'G' status
+select * from customer
+where status = 'G' /p/g
+X
+# Get sorted list of customers by age
+select * from customer
+order by age num
+/p/g 
+X
+# Make a table to hold customer status codes and their descriptions
+create table codes ( 
+X	code 1,
+X	description 10 )
+/p/g
+X
+# Insert status codes
+insert into codes values 
+( 'G', 'Good', 'B', 'Bad', 'D', 'Dead Beat' )
+/p/g
+X
+# Create a view so we can see the customer name and status description
+create view custstat ( customer.status = codes.code )
+/p/g
+X
+# Look at the table
+help custstat
+/p/g
+select * from custstat
+/p/g
+X
+select * 
+from customer, codes
+where status = code
+/p/g
+X
+# Replace 'Barney' with 'Bad Bart'
+update customer 
+set name = 'Bad Bart', status = 'X' 
+where age = 29
+/p/g
+X
+print customer
+/p/g
+X
+# Get all customers that have invalid status'es
+select * from customer
+where status not in select code 
+X		    from codes
+/p/g
+X
+# Remove 'Fred'
+delete from customer
+where age = 32
+/p/g
+X
+# Get rid of view 
+drop view custstat
+/p/g
+X
+# Create a holding table for old customers
+create table oldcust (
+X	name 30,
+X	status 1 )
+/p/g
+X
+# Copy old customer to new table
+insert into oldcust ( 
+X	name status )
+select name status 
+from customer
+where age > 28
+/p/g
+X
+select avg(age)
+from customer
+/p/g
+X
+select name
+from customer
+where age = select min(age)
+X	    from customer
+/p/g
+X
+# Look at table
+print oldcust
+/p/g
+X
+# Delete customers moved over
+delete from customer
+where age > 28
+/p/g
+X
+print customer
+/p/g
+X
+# Try a union of the two tables
+select name age
+from customer
+union
+select name status 
+from oldcust
+/p/g
+X
+# Show example of executing Unix commands
+insert into customer 
+values ( '`date`', `ls / | wc -l`, 'Y' )
+/p/g
+print customer
+/p/g
+# Clean up
+drop table codes
+/p/g
+drop table customer
+/p/g
+drop table oldcust
+/p/g
+/q	
+SHAR_EOF
+  $shar_touch -am 0709174495 'demo.shql' &&
+  chmod 0644 'demo.shql' ||
+  echo 'restore of demo.shql failed'
+  shar_count="`wc -c < 'demo.shql'`"
+  test 2156 -eq "$shar_count" ||
+    echo "demo.shql: original size 2156, current size $shar_count"
+fi
+# ============= shql ==============
+if test -f 'shql' && test X"$1" != X"-c"; then
+  echo 'x - skipping shql (file already exists)'
+else
+  echo 'x - extracting shql (text)'
+  sed 's/^X//' << 'SHAR_EOF' > 'shql' &&
+#!/bin/sh
+# use /bin/sh, /bin/ksh, or /bin/bash
+#
+# shql - version 1.3
+#
+# by Bruce Momjian, root@candle.pha.pa.us
+#
+X
+# $Id: shql,v 1.23 1995/06/11 02:23:58 root Exp root $
+X
+# DEFINE THESE
+SHQL_ROOT="/u/shql"		# system-wide database location
+EDITOR="${EDITOR:=/usr/bin/vi}" # default editor if EDITOR not defined
+SHELL="${SHELL:=/bin/sh}" 	# default editor if SHELL not defined
+X
+# Unix table file postfixes:  @ is attrib, ~ is data, % is view
+X
+DEBUG="N"	# set to Y for debugging
+X
+[ "$DEBUG" = "Y" ] && set -x   		# uncomment for debugging
+#set -v
+UMASK=`umask`
+umask 0000		# share database
+trap "echo \"Goodbye\" ; \
+X    rm -f /tmp/$$ /tmp/$$row /tmp/$$join*" 0 1 2 3 15
+set -h			# remember functions
+X
+if echo '\c' | grep -s c ; then		# to adapt to System V vs. BSD 'echo'
+X	NOCR1='-n'			# BSD
+X	NOCR2=""
+else
+X	NOCR1=""			# System V
+X	NOCR2='\c'
+fi
+NL='
+'
+TAB='	'
+X
+if [ "X$1" = "X-q" ] 
+then	QUIET="Y"
+X	shift
+fi
+X
+_IFS="$IFS"
+X
+export _IFS TABLE CMD NOCR1 NOCR2 NL TAB QUIET DEBUG
+X
+if [ "X$1" = "X" ]
+then	echo "Missing database name." 1>&2
+X	echo "The database name must be a directory under $HOME/shql" 1>&2
+X	echo "	or a directory under $SHQL_ROOT" 1>&2
+X	exit 1
+fi
+echo "Database: $1"
+X
+if [ -d $HOME/shql/$1 ]
+then	cd $HOME/shql/$1
+elif [ -d $SHQL_ROOT/$1 ]
+then	cd $SHQL_ROOT/$1
+elif [ -d $HOME/$1 ]
+then	cd $HOME/$1
+elif [ -d $1 ]
+then	cd $1
+else 	echo "Unknown database ($1)" 1>&2
+X	echo "The database name must be a directory under $HOME/shql" 1>&2
+X	echo "	or a directory under $SHQL_ROOT" 1>&2
+X	exit 1
+fi
+X
+X
+#
+#**************************************************************************
+# syntax
+#**************************************************************************
+syntax(){
+X	case "$1" in
+X		create)	cat <<"END"
+CREATE TABLE table_name (
+X	column_name column_width 
+X	{, ...} 
+) 	
+or
+CREATE VIEW view_name (
+X	table_or_view1.column1 = table_or_view2.column2
+)
+END
+return 0
+;;
+X		delete) cat <<"END"
+DELETE 
+FROM table_name	
+{ WHERE where_clause }
+END
+return 0
+;;
+X		drop) cat <<"END"
+DROP TABLE table_name
+or
+DROP VIEW view_name
+END
+return 0
+;;
+X		edit) cat <<"END"
+EDIT table_name
+is a non-standard method of changing a table's field names or display widths.
+END
+return 0
+;;
+X		help)	cat <<"END"
+HELP ALL
+or
+HELP TABLES 
+or
+HELP VIEWS
+or
+HELP COMMANDS
+or
+HELP [CREATE | DELETE | DROP | INSERT | SELECT | UPDATE | WHERE | PRINT | EDIT]
+or
+HELP table_name
+Commands must appear in lower case.
+END
+return 0
+;;
+X		insert) cat <<"END"
+INSERT INTO table_name 
+X	{ ( column_name, ... ) }
+VALUES ( expression, ...)
+or		
+INSERT INTO table_name 
+X	{ ( column_name, ... ) }
+subselect
+END
+return 0
+;;
+X		print) cat <<"END"
+PRINT table_name 
+is a non-standard synonym for SELECT * FROM table_name.
+END
+return 0
+;;
+X		select) cat <<"END"
+SELECT { DISTINCT } 
+X	[ column_name {,...} | * ]
+FROM [ table_name | view_name ]
+{ WHERE where_clause }
+{ ORDER BY column_name { NUM } { ASC | DESC } {, ... }
+{ UNION select statement }
+'NUM' is a non-standard method for sorting numeric fields.
+END
+return 0
+;;
+X		update) cat <<"END"
+UPDATE table_name
+SET column_name = expression {, ... }
+{ WHERE where_clause }
+END
+return 0
+;;
+X		where) cat <<"END"
+WHERE [ column_name | value ] [ =, !=, >, <, >=, <=, and, or, not, in ]
+X      [ column_name | value | subselect ]
+Parentheses may be used to group expressions.  
+END
+return 0
+;;
+X		syntax)	syntax commands; echo
+X			syntax create; echo
+X			syntax delete; echo
+X			syntax drop; echo
+X			syntax insert; echo
+X			syntax select; echo
+X			syntax update; echo
+X			syntax where; echo
+X			syntax print; echo
+X			syntax edit; echo
+X			return 0
+X			;;
+X	esac
+X	return 1
+}
+X
+#
+#**************************************************************************
+# lookup_field
+#**************************************************************************
+lookup_field(){
+X	RESULT="`grep -n \"^$1	\" $TABLE@ | sed 1q`"
+X	if [ ! "$RESULT" ] 
+X	then 	OUTFIELD="$1"
+X		return 1
+X	else	OUTFIELDNUM="`expr "$RESULT" : '\([^:]*\)'`"
+X		OUTFIELD="\$$OUTFIELDNUM" 
+X		return 0
+X	fi
+}
+X
+#
+#**************************************************************************
+# do_aggreg
+#**************************************************************************
+do_aggreg(){
+X	if 	[ "X$1" = 'Xsum' ]
+X	then	AGGREG='total'
+X	elif 	[ "X$1" = 'Xavg' ]
+X	then 	AGGREG='(total/cnt)'
+X	elif 	[ "X$1" = 'Xcount' ]
+X	then 	AGGREG='cnt'
+X	elif 	[ "X$1" = 'Xmin' ]
+X	then 	AGGREG='min'
+X	elif 	[ "X$1" = 'Xmax' ]
+X	then 	AGGREG='max'
+X	else	return 1
+X	fi
+X	[ "X$2" != "X(" -o "X$4" != "X)" ] && \
+X		echo "Bad aggregate syntax" 1>&2 && syntax select && return 1
+X	AGGFIELD="$3"
+X	shift 4
+X	lookup_field "$AGGFIELD"
+X	[ "$?" -ne 0 ] && echo "Bad field name ($1)" 1>&2 && return 1
+X	while [ $# -ne 0 ]
+X	do	
+X		[ "X$1" = "Xwhere" ] && break;
+X		[ "X$1" = "Xorder" ] && break;
+X		[ "X$1" = "Xunion" ] && break;
+X		shift
+X	done
+X
+X	OUTFIELD=`( SUBSELECT="Y" ; AGGREGATE="Y"; \
+X	    select_ "select" "$AGGFIELD" "from" "$TABLE" "$@") | \
+X	    awk -F"	" \
+X		'NR == 1 { min = $1; max = $1 }
+X			 { cnt += 1; total += $1 }
+X		$1 < min { min = $1 }
+X		$1 > max { max = $1 }
+X		END	 { printf "%s%s%s", "\"", '$AGGREG', "\"" }'`
+X	if [ `expr "$RESULT" : '[^	]*	\(.*\)'` -lt 10 ]
+X	then	RESULT="$AGGFIELD	10"
+X	fi
+X	return 0
+}
+X
+#
+#**************************************************************************
+# do_join 
+#**************************************************************************
+do_join(){
+X	update_view "$1"
+X	TABLE="$1"
+X	lookup_field "$2" 
+X	[ "$?" -ne 0 ] && echo "Bad view specifcation ($1.$2)" 1>&2 && return 1
+X	JFIELD1="$OUTFIELDNUM"
+X	JFIELD1L1="`expr $JFIELD1 - 1`"
+X	update_view "$3"
+X	TABLE="$3"
+X	lookup_field "$4" 
+X	[ "$?" -ne 0 ] && echo "Bad view specifcation ($3.$4)" 1>&2 && return 1
+X	JFIELD2="$OUTFIELDNUM"
+X	JFIELD2L1="`expr $JFIELD2 - 1`"
+X
+X	( grep "^$2	" $1@ ;
+X	  grep -v "^$2	" $1@ ;
+X	  grep -v "^$4	" $3@ ) > $5@
+X	sort -t\	 +$JFIELD2L1 $3~ > /tmp/$$
+X	sort -t\	 +$JFIELD1L1 $1~ | \
+X		join -t\	 -j1 $JFIELD1 -j2 $JFIELD2 \
+X						- /tmp/$$ > $5~
+}
+X
+#
+#**************************************************************************
+# update_view
+#**************************************************************************
+update_view(){
+X	[ ! -f "$1%" ] && return 1
+X	( do_join `cat $1%` )
+}
+X
+#
+#**************************************************************************
+# where
+#**************************************************************************
+where(){
+X	shift
+X	while [ $# -gt 0 -a "$1" != "order" -a "$1" != "union" ]
+X	do
+X		if [ "X$1" = "Xselect" ]
+X		then
+X			set X `( SUBSELECT="Y" ;select_ "$@")`
+X			if [ "$?" -eq 0 ]
+X			then 	shift
+X			else 	return 1
+X			fi
+X		fi
+X		case "$1" in
+X			and) 	WHERE="$WHERE && ";;
+X			or)	WHERE="$WHERE || ";;
+X			not)	WHERE="$WHERE !" ;;
+X			=)	WHERE="$WHERE == ";;
+X			'in') 	shift
+X				set X `( SUBSELECT='Y';select_ "$@" )`
+X				if [ "$?" -eq 0 ]
+X				then 	shift
+X				else 	return 1
+X				fi
+X				INWHERE=""
+X				COMP="=="
+X				LOGIC="||"
+X				[ "X$LAST" = "Xnot" ] && COMP="=" && LOGIC="&&"
+X				[ "$#" -eq 0 ] && set "\"__()__\""
+X				for VALUE
+X				do
+X					[ "X$INWHERE" != "X" ] && 
+X						INWHERE="$INWHERE $LOGIC"
+X					INWHERE="$INWHERE ($WHERE$COMP $VALUE) "
+X				done
+X				WHERE="$INWHERE"
+X				break;;
+X			*)	lookup_field "$1"
+X				WHERE="$WHERE $OUTFIELD";;
+X		esac
+X		LAST="$1"
+X		shift
+X	done 
+X	[ "$WHERE" ] && WHERE=" ( $WHERE ) " && return 0
+X	echo "Missing 'where' clause" 1>&2
+X	syntax where
+X	return 1
+}
+X
+#
+#**************************************************************************
+# help
+#**************************************************************************
+help(){
+X	if [ ! "$2" ]
+X	then	echo "Ambiguous syntax, try:" 1>&2 ; syntax help
+X	elif [ "$2" = "all" ]
+X	then	ls *@ *% 2>/dev/null | cut -d@ -f1 | cut -d% -f1 | uniq
+X	elif [ "$2" = "tables" ] 
+X	then	ls *@ *% 2>/dev/null | cut -d@ -f1 | cut -d% -f1 | uniq -u 
+X	elif [ "$2" = "views" ] 
+X	then	ls *% 2>/dev/null | cut -d% -f1 
+X	elif [ "$2" = "commands" ]
+X	then	cat << "END"
+/p is print
+/g is go(execute)
+/q is quit
+/e is edit
+/i is include
+/w is write
+/r is reset(clear)
+/s is shell
+/p/g print and go
+The number sign(#) may be used at the start of a line for comments.
+END
+X	else	syntax $2 && return
+X		TABLE="$2"
+X		update_view "$TABLE"
+X		if [ -f "$2@" ] 
+X		then	echo "$NL <$2>" && cat "$2@"
+X			[ -f "${2}%" ] &&echo $NOCR1 "$NL View:	$NOCR2" && 
+X				set X `cat $2%` && shift &&
+X				echo "$1.$2 = $3.$4"
+X			echo "$NL Rows:	"`cat $TABLE~ | wc -l`
+X		else 	echo "$TABLE does not exist." 1>&2
+X			syntax help
+X		fi
+X	fi
+}
+X
+#
+#**************************************************************************
+# create
+#**************************************************************************
+create(){
+X	shift
+X	if [ -f "$2@" -o -f "$2%" ]
+X	then	echo "Table already exists." 1>&2
+X	elif [ "X$1" = "Xview" -a $# -gt 2 ]
+X	then	shift
+X		if [ $# -ne 6 ]
+X		then 	syntax create
+X		else 	
+X			[ "X$2" != "X(" ] && echo "Bad syntax" 1>&2 && 
+X							syntax create && return
+X			TABLE1="`expr $3 : '\([^\.]*\)'`"
+X			FIELD1="`expr $3 : '[^\.]*.\(.*\)'`"
+X			TABLE="$TABLE1"
+X			lookup_field "$FIELD1" 
+X			[ "$?" -ne 0 ] && echo "Bad table or field name" 1>&2 &&
+X									return
+X			[ "X$4" != "X=" ] && echo "Bad syntax" 1>&2 && 
+X							syntax create && return
+X			TABLE2="`expr $5 : '\([^\.]*\)'`"
+X			FIELD2="`expr $5 : '[^\.]*.\(.*\)'`"
+X			TABLE="$TABLE2"
+X			lookup_field "$FIELD2" 
+X			[ "$?" -ne 0 ] && echo "Bad table or field name" 1>&2 &&
+X									return
+X			[ "X$2" != "X(" ] && echo "Bad syntax" 1>&2 && 
+X							syntax create && return
+X			echo "$TABLE1 $FIELD1 $TABLE2 $FIELD2 $1" > $1%
+X			update_view "$1"			
+X		fi
+X		echo "OK"
+X	elif [ "X$1" = "Xtable" -a $# -ge 5 ] 
+X	then
+X		[ "X$3" != "X(" ] && echo "Bad syntax" 1>&2 && 
+X							syntax create && return
+X		TABLE="$2"
+X		shift 3
+X		> $TABLE@
+X		> $TABLE~
+X		while [ $# -ge 2 ]
+X		do
+X			echo "$1	$2" >> $TABLE@
+X			shift 2
+X		done
+X		[ "X$1" != "X)" ] && echo "Bad syntax" 1>&2 && 
+X					rm -f $TABLE@ && syntax create && return
+X		echo "OK"
+X	else 
+X		echo "Improper syntax ($1)" 1>&2
+X		syntax create
+X	fi
+X	return
+}
+X
+#
+#*************************************************************************
+# drop
+#**************************************************************************
+drop(){
+X	[ "$2" != "table" -a "$2" != "view" ] && 
+X		echo "Syntax error." 1>&2 && syntax drop && return
+X	[ "$2" = "table" -a -f "$3%" ] &&
+X		echo "Can not drop, $2 is a view, not a table" 1>&2 && return
+X	[ "$2" = "view" -a ! -f "$3%" ] &&
+X		echo "Can not drop, $2 is not a view" 1>&2 && return
+X	if [ -f "$3@" -o -f "$3%" ] 
+X	then	rm -f $3@ $3~ $3%
+X		echo "OK"
+X	else  	echo "No such table" 1>&2
+X	fi
+}
+X
+#
+#**************************************************************************
+# insert
+#**************************************************************************
+insert(){
+X	shift
+X	[ "X$1" != "Xinto" ] && echo "Improper syntax ($1)" 1>&2 && 
+X		syntax insert && return
+X	shift
+X	TABLE="$1"
+X	update_view "$TABLE" && echo "Can not insert into a view" 1>&2 && return
+X	[ ! -f "$TABLE@" ] && echo "Table does not exist" 1>&2 && return
+X	shift
+X	ATTRIB="`cat $TABLE@ | wc -l`"
+X	XASGN=""
+X	XECHO="echo \""
+X	if [ $# -gt 0 -a "X$1" = "X(" ]
+X	then	ATTRIB2="0"
+X		shift
+X		while [ $# -gt 0 -a "X$1" != "X)" ]
+X		do
+X			lookup_field "$1" 
+X			[ "$?" -ne 0 ] && echo "Bad field name. ($1)" 1>&2 && 
+X									return 
+X			XASGN="$XASGN X$OUTFIELDNUM=\`eval echo \$1\` ; shift;"
+X			shift
+X			ATTRIB2=`expr $ATTRIB2 + 1`
+X		done
+X		[ "X$1" != "X)" ] && echo "Syntax error ($1)" 1>&2 && 
+X						syntax insert && return
+X		shift
+X		POS="1"
+X		while [ "$POS" -le "$ATTRIB" ]
+X		do
+X			eval X$POS=""
+X			[ "$POS" != "1" ] && XECHO="$XECHO\$TAB"
+X			XECHO="$XECHO\$X$POS"
+X			POS=`expr $POS + 1`
+X		done
+X		XECHO="$XECHO\""
+X		ATTRIB="$ATTRIB2"
+X	fi	
+X	if [ "X$1" = "Xselect" ]
+X	then 	eval set X "`( SUBSELECT='Y' ; select_ "$@" )` \)"
+X		shift
+X	elif [ "X$1" != "Xvalues" -o "X$2" != 'X(' ]  
+X		then	 echo "Improper syntax ($1)" 1>&2 && syntax insert && 
+X									return
+X	else	shift 2
+X	fi
+X	for LAST do 
+X	: ; done
+X	[ "X$LAST" != "X)" ] && 
+X		echo "Improper syntax" 1>&2 && syntax insert && return
+X	if [ "`expr \( $# - 1 \) % $ATTRIB`" -ne 0 ]
+X	then 	echo "Incorrect number of values." 1>&2
+X	else	ROWS="`expr \( $# - 1 \) / $ATTRIB`"
+X		while [ $# -gt 1 ]
+X		do	
+X			if [ "$XASGN" = "" ]
+X			then 	
+X				echo $NOCR1 "`eval echo $1`$NOCR2" >> $TABLE~ 
+X				shift
+X				while [ "`expr \( $# - 1 \) % $ATTRIB`" -ne 0 ]
+X				do
+X					echo $NOCR1 "$TAB`eval echo $1`$NOCR2"\
+X							 	>> $TABLE~
+X					shift
+X				done
+X				echo "" >> $TABLE~
+X			else	eval $XASGN
+X				eval $XECHO >> $TABLE~
+X			fi
+X		done
+X		echo "($ROWS rows)"			
+X	fi
+}
+X
+#
+#*************************************************************************
+# delete
+#**************************************************************************
+delete(){
+X	TABLE="$3"
+X	[ "X$2" != "Xfrom" ] && echo "Improper syntax ($2)" 1>&2 && 
+X		syntax delete && return
+X	update_view "$TABLE" && echo "You can not delete from a view." 1>&2 &&
+X									return  
+X	[ ! -f "$TABLE@" ] && echo "$TABLE does not exist." 1>&2 && return
+X	WHERE=""
+X	if [ "X$4" = "Xwhere" ]
+X	then 	shift 3
+X		where "$@" && 
+X		awk -F"	" "! $WHERE { cnt += 1 ; print } 
+X			END { printf \"( %1d rows)\\n\", (NR - cnt) \
+X			>\"/tmp/$$row\" }" $TABLE~ > /tmp/$$ && 
+X			mv /tmp/$$ $TABLE~ && cat /tmp/$$row
+X	else	echo '('`cat $TABLE~ | wc -l`' rows)' 
+X		> $TABLE~
+X	fi
+}
+X
+#
+#*************************************************************************
+# update
+#**************************************************************************
+update(){
+X	TABLE="$2"
+X	update_view "$TABLE" && echo "Can not update a view." 1>&2 && return
+X	[ ! -f "$TABLE@" ] && echo "$TABLE does not exit." 1>&2 && return
+X	[ "X$3" != "Xset" ] && echo "Improper syntax." 1>&2 && syntax update && 
+X									return
+X	shift 3
+X	ASSIGN=""
+X	while [ $# -gt 0 -a "X$1" != "Xwhere" ]
+X	do
+X		lookup_field "$1" && [ "X$2" = "X=" ] && ASSIGN="$ASSIGN ; "
+X		ASSIGN="$ASSIGN $OUTFIELD"
+X		shift
+X	done
+X	WHERE=""
+X	if [ "X$1" = "Xwhere" ] 
+X	then 	where "$@" || return 
+X	fi
+X	awk -F"	" "BEGIN { OFS = \"	\" }
+X		$WHERE 	{ $ASSIGN; cnt += 1 }
+X			{ print } 
+X		END 	{ printf \"( %1d rows)\\n\", cnt >\"/tmp/$$row\" }" \
+X		$TABLE~ > /tmp/$$ && 
+X			mv /tmp/$$ $TABLE~ && cat /tmp/$$row
+}
+X
+#
+#**************************************************************************
+# select_
+#**************************************************************************
+select_(){
+[ "$DEBUG" = "Y" ] && set -x
+X	UNION="Y"
+X	while [ "$UNION" != "" ]
+X	do
+X		INAGG=""
+X		FROM=""
+X		UNION=""
+X		TABLE=""
+X		for ATABLE
+X		do
+X		    [ "X$ATABLE" = "Xwhere" ] && break
+X		    [ "X$ATABLE" = "Xorder" ] && break
+X		    [ "X$ATABLE" = "Xunion" ] && break
+X		    [ "X$ATABLE" = "Xfrom" ] && FROM="Y" && continue
+X		    if [ "$FROM" ]
+X		    then
+X			[ ! -f "$ATABLE@" ] && \
+X			echo "$ATABLE does not exist." 1>&2 && return 1
+X			if [ ! "$TABLE" ]
+X			then 	TABLE="$ATABLE"
+X			else	JTABLE="$TABLE"
+X				PREV=""
+X				PPREV=""
+X				FOUND=""
+X				for GETJ
+X				do
+X				    if [ "$PREV" = "=" ]
+X				    then
+X					TABLE="$JTABLE"
+X					lookup_field "$PPREV" &&
+X					TABLE="$ATABLE" &&
+X					lookup_field "$GETJ" &&
+X					FOUND="Y1" &&
+X					break
+X					TABLE="$ATABLE"
+X					lookup_field "$PPREV" &&
+X					TABLE="$JTABLE" &&
+X					lookup_field "$GETJ" &&
+X					FOUND="Y2" &&
+X					break
+X				    fi
+X				    PPREV="$PREV"
+X				    PREV="$GETJ"
+X				done
+X				[ ! "$FOUND" ] &&
+X				echo "Join not found, \c" &&
+X				echo "try reordering tables." 1>&2 && return 1
+X				if [ "$FOUND" = "Y1" ]
+X				then
+X	echo "$JTABLE	$PPREV	$ATABLE	$GETJ	/tmp/$$join2" >/tmp/$$join2%
+X				else
+X	echo "$ATABLE	$PPREV	$JTABLE	$GETJ	/tmp/$$join2" >/tmp/$$join2%
+X				fi
+X				update_view /tmp/$$join2
+X				mv /tmp/$$join2~ /tmp/$$join~
+X				mv /tmp/$$join2@ /tmp/$$join@
+X				expr "$RESULT" : '[^:]:*\(.*\)' >>/tmp/$$join@
+X				cut -d\	 -f1 /tmp/$$join~ | \
+X					paste /tmp/$$join~ - >/tmp/$$
+X				mv /tmp/$$ /tmp/$$join~
+X				TABLE="/tmp/$$join"
+X			fi
+X		    fi
+X		done
+X		[ ! "$FROM" ] && echo "Syntax error." 1>&2 && syntax select &&
+X								return 1
+X		update_view "$TABLE"
+X 		shift
+X		DISTINCT=""
+X		[ "X$1" = "Xdistinct" ] && DISTINCT="Y" && shift
+X		FIELDS=""
+X		PRINTF=""
+X		while [ "X$1" != "Xfrom" ]
+X		do
+X			if [ "X$1" = 'X*' ]
+X			then	shift
+X				set X `cat $TABLE@ | cut -d\	 -f1` "$@" 
+X				shift
+X			else	lookup_field "$1"
+X				if [ "$?" -ne 0 ]
+X				then 	do_aggreg "$@"
+X					if [ "$?" -eq 0 ]
+X					then	INAGG="Y"
+X						shift 3
+X					else 
+X					  echo "Bad field name ($1)" 1>&2
+X					  return 1
+X					fi
+X				fi
+X				[ "$FIELDS" ] && FIELDS="$FIELDS,"
+X				FIELDS="$FIELDS $OUTFIELD"
+X				if [ "$SUBSELECT" = "" ]
+X				then 	[ ! "$PRINTF" ] && PRINTF="|"
+X					WIDTH=`expr "$RESULT" : \
+X						'[^	]*	\(.*\)'`
+X					PRINTF="$PRINTF%-$WIDTH.${WIDTH}s|"
+X				else	if [ ! "$AGGREGATE" ]
+X					then	PRINTF="$PRINTF\\\"%s\\\" "
+X					else	PRINTF="$PRINTF%s\n"
+X					fi
+X				fi
+X				shift
+X			fi
+X		done
+X		shift 2
+X		WHERE=""
+X		WHERE_USED=""
+X		SORT=""
+X		while [ $# -ne 0 ]
+X		do	
+X			if [ "X$1" = "Xwhere" -a "$WHERE_USED" = "" ]
+X			then
+X				where "$@"
+X				[ "$?" -ne 0 ] && return 1 
+X				[ "$QUIET" = "" -a "$SUBSELECT" = "" ] && 
+X						WHERE="$WHERE || NR == 1"
+X				WHERE_USED="Y"
+X				shift
+X			elif [ "X$1" = "Xorder" ]
+X			then 	[ "X$2" != "Xby" ] && 
+X					echo "Syntax error ($2)" 1>&2 && 
+X					syntax select && return 1
+X				shift 2
+X				while [ $# -gt 0 -a "$1" != "union" ]
+X				do
+X					if [ 	"X$1" != "Xasc" -a \
+X						"X$1" != "Xdesc" -a \
+X						"X$1" != "Xnum" ] 
+X					then	lookup_field "$1" 
+X						[ "$?" -ne 0 ] &&
+X				echo "Bad field name ($1)" 1>&2 && return 1 
+X						[ "$SORT" = "" ] && 
+X							SORT="sort -t\"	\" "
+X						SORTL="`expr $OUTFIELDNUM - 1`"
+X						SORT="$SORT +$SORTL"
+X						[ "X$2" = "Xnum" ] && 
+X							SORT="${SORT}n"
+X						[ "X$2" = "Xdesc" ] && 
+X							SORT="${SORT}r"
+X						[ "X$3" = "Xdesc" ] && 
+X							SORT="${SORT}r"
+X						SORT="$SORT -$OUTFIELDNUM"
+X					fi
+X					shift
+X				done
+X			elif [ "X$1" = "Xunion" ]
+X			then	shift
+X				UNION="Y"
+X				WHERE_USED=""
+X				break
+X			else	shift
+X			fi
+X		done
+X		[ "$INAGG" ] && WHERE="NR == 1"
+X
+X		if [ "$DISTINCT" != "" ] 
+X		then	if [ "$SORT" = "" ]
+X			then	DIST="sort | uniq | tee /tmp/$$row"
+X			else	DIST="uniq | tee /tmp/$$row"
+X			fi
+X		else	DIST="cat"
+X		fi					
+X
+X		TABLEFILE="$TABLE~"
+X		[ "$SORT" != "" ] && cat $TABLE~ | eval "$SORT" > /tmp/$$ &&
+X							TABLEFILE="/tmp/$$"
+X
+X		if [ "$SUBSELECT" ]
+X		then	awk -F"	" "$WHERE {printf \"$PRINTF\", $FIELDS }" \
+X							$TABLEFILE |eval "$DIST"
+X		else    if [ ! "$QUIET" -o "$INAGG" = "Y" ]
+X			then 
+X			( set X `cut -d\	 -f1 $TABLE@` ; shift 
+X			  echo $NOCR1 "-$1-$NOCR2" ; shift 
+X		  	  for HEADING
+X			  do 
+X				echo $NOCR1 "$TAB-$HEADING-$NOCR2" 
+X	 		  done ; echo "" )
+X			fi |
+X			awk -F"	" \
+X			"$WHERE { cnt += 1 ; printf \"$PRINTF\\n\", $FIELDS }
+X			END	{ printf \"( %1d rows)\\n\", (cnt - 1) \
+X			>\"/tmp/$$row\" }" - $TABLEFILE | eval "$DIST" \
+X				&& if [ "$DISTINCT" = "" ]
+X				   then	cat /tmp/$$row
+X				   else if [ "$QUIET" = "" ]
+X					then	X=`expr \`cat /tmp/$$row|wc -l\` - 1`
+X					else	X=`expr \`cat /tmp/$$row|wc -l\``
+X					fi
+X					echo '('$X' rows)' 
+X				fi
+X		fi
+X	done
+X	return 0
+}	
+X
+#
+#**************************************************************************
+# main
+#**************************************************************************
+while :
+do
+X	while :
+X	do
+X		echo $NOCR1 "* $NOCR2"
+X		read LINE || exit 
+X		SQLPART="`expr "$LINE" : '\(..*\)/. *$'`"
+X		if [ "$SQLPART" != "" ]
+X		then
+X			[ "$NEW" = "Y" ] && _CMD=""
+X			if [ "`expr "$LINE" : '.*/p/g *$'`" -ne 0 ]
+X			then
+X				_CMD="$_CMD"`expr "$LINE" : '\(.*\)/p/g *$'`"$NL"
+X				LINE="/p/g"
+X				NEW=""
+X			else
+X				_CMD="$_CMD""$SQLPART""$NL"
+X				LINE="`expr "$LINE" : '.*\(/.\) *$'`"
+X				NEW=""
+X			fi
+X		fi
+X 		case "$LINE" in 
+X			/p|p)  echo "$_CMD";;
+X			/g|g)  break;;
+X			/p/g|pg) echo "$_CMD" ; break ;;
+X			/r|r)  echo "reset" ; _CMD="";;
+X			/s|s)  umask $UMASK ; $SHELL ; umask 0000;;
+X			/e|e)  umask $UMASK ; echo "$_CMD" > /tmp/$$
+X				$EDITOR /tmp/$$; _CMD="`cat /tmp/$$`"
+X				umask 0000;;
+X			/i|i)  echo $NOCR1 "Enter include file: $NOCR2" 
+X				read LINE  
+X				[ -f "$LINE" ] && _CMD="$_CMD`cat $LINE`$NL" &&
+X				echo "$LINE included";;
+X			/w|w)  echo $NOCR1 "Enter output file: $NOCR2" 
+X				read LINE  
+X				[ "$LINE" ] && umask $UMASK && 
+X				echo "$_CMD" > "$LINE" && umask 0000 && 
+X				echo "$LINE written";;
+X			/q|q)  exit 0;; 
+X			\#*) 	[ "$NEW" = "Y" ] && _CMD="" ;;
+X			*)  	[ "$NEW" = "Y" ] && _CMD=""
+X			    	_CMD="$_CMD$LINE$NL";;
+X		esac
+X		NEW=""
+X	done
+X
+X	CMD=`echo "$_CMD" | sed \
+X		-e "s/'/\"/g" \
+X		-e 's/\"\([^\"]*\)\"/\"\\\"\1\\\"\"/g' \
+X		-e 's/\([<>!=][<>!=]*\)/ \1 /g' \
+X		-e 's/</\\\</g' \
+X		-e 's/>/\\\>/g' \
+X		-e 's/\*/\\\*/g' \
+X		-e 's/(/ \\\( /g' \
+X		-e 's/)/ \\\) /g'`
+X	[ ! "$CMD" ] && continue
+X	IFS="$_IFS,"
+X	eval set X $CMD
+X	shift
+X	IFS="$_IFS"
+X	NEW="Y"
+X	case $1 in
+X		select) 	select_ "$@";; 
+X		create) 	create "$@";;
+X		delete) 	delete "$@";;
+X		drop) 		drop "$@";;
+X		insert) 	insert "$@";;
+X		update) 	update "$@";;
+X		edit)		[ "$2" ] && $EDITOR $2@;;
+X		help)		help "$@";;
+X		print)		select_ "select" '*' "from" "$2";;
+X		*) 		echo "Missing or unrecognized command." 1>&2 ;;
+X	esac
+done
+SHAR_EOF
+  $shar_touch -am 0709174495 'shql' &&
+  chmod 0755 'shql' ||
+  echo 'restore of shql failed'
+  shar_count="`wc -c < 'shql'`"
+  test 20727 -eq "$shar_count" ||
+    echo "shql: original size 20727, current size $shar_count"
+fi
+exit 0
+
+-- 
+Bruce Momjian                          |  830 Blythe Avenue
+root@candle.pha.pa.us                  |  Drexel Hill, Pennsylvania 19026 
+  +  If your life is a hard drive,     |  (610) 353-9879(w) 
+  +  Christ can be your backup.        |  (610) 853-3000(h)
