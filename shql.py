@@ -2,7 +2,7 @@
 """
 shql.py - A self-contained flat-file SQL interpreter in Python.
 Replicates Bruce Momjian's shql-1.3 flat-file SQL interpreter with CSV storage.
-Zero external dependencies. Launches $EDITOR if set for /e command.
+Zero external dependencies.
 """
 
 import sys
@@ -613,7 +613,7 @@ class QueryEngine:
             for v in sorted(self.get_all_views()):
                 output_stream.write(f"{v}\n")
         elif arg == "commands":
-            output_stream.write("/p is print\n/g is go(execute)\n/q is quit\n/e is edit\n/i is include\n/w is write\n/r is reset(clear)\n/s is shell\n/p/g print and go\nThe number sign(#) may be used at the start of a line for comments.\n")
+            output_stream.write("/p is print\n/g is go(execute)\n/q is quit\n/e is edit\n/i is include\n/w is write\n/r is reset(clear)\n/s is shell\n/y is python shell\n/p/g print and go\nThe number sign(#) may be used at the start of a line for comments.\n")
         elif arg in ("create", "delete", "drop", "edit", "help", "insert", "print", "select", "update", "where", "syntax"):
             self.print_syntax_help(arg, output_stream)
         else:
@@ -1114,6 +1114,9 @@ class REPL:
                     output_stream.flush()
                     self.cmd_buffer = ""
                 elif cmd_lower in ("/s", "s"):
+                    shell = os.environ.get("SHELL", "/bin/sh")
+                    subprocess.run(shell, shell=True)
+                elif cmd_lower in ("/y", "y", "/py", "py"):
                     output_stream.write("Entering Python Shell (type exit() to return):\n")
                     output_stream.flush()
                     code.interact(banner="", local={"db": self.db, "engine": self.engine})
